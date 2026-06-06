@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🧙‍♂️ Preposition Maze</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: #0a0c16;
+            font-family: 'Courier New', 'VT323', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            transition: opacity 0.5s ease;
+        }
+        .start-card {
+            text-align: center;
+            max-width: 90%;
+            width: 600px;
+        }
+        .start-card img {
+            width: 100%;
+            border-radius: 2rem;
+            border: 4px solid #ffb347;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        .start-btn {
+            background: #f5c542;
+            border: none;
+            font-size: 2rem;
+            font-weight: bold;
+            padding: 0.8rem 2rem;
+            margin-top: 2rem;
+            border-radius: 3rem;
+            color: #1a1f2e;
+            cursor: pointer;
+            font-family: monospace;
+            transition: 0.1s linear;
+            box-shadow: 0 6px 0 #b87c10;
+        }
+        .start-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #b87c10; }
+
+        .game-container {
+            background: #1a1f2e;
+            border-radius: 2rem;
+            padding: 1.5rem;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+            display: flex;
+            gap: 2rem;
+            flex-wrap: nowrap;
+            align-items: stretch;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        .hidden-game { display: none; }
+
+        .maze-area { flex-shrink: 0; position: relative; }
+        
+        /* Base Grid Size */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(14, 48px);
+            grid-template-rows: repeat(11, 48px);
+            background-color: #2c3e2f;
+            border: 3px solid #5a3e2b;
+            border-radius: 0.8rem;
+            overflow: hidden;
+        }
+        
+        .battle-container {
+            width: calc(14 * 48px);
+            height: calc(11 * 48px);
+            background: #0b0e1a;
+            border: 3px solid #ffb347;
+            border-radius: 0.8rem;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-shadow: 0 0 0 2px #7e57c2, inset 0 0 0 2px #ffd966;
+            transition: filter 0.1s ease;
+        }
+        .end-overlay {
+            width: calc(14 * 48px);
+            height: calc(11 * 48px);
+            background: #000000cc;
+            border-radius: 0.8rem;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            backdrop-filter: blur(4px);
+        }
+        .end-overlay img {
+            max-width: 80%;
+            max-height: 60%;
+            border-radius: 20px;
+            border: 3px solid gold;
+            margin-bottom: 1rem;
+        }
+        .end-overlay p {
+            background: #000000aa;
+            padding: 0.5rem;
+            border-radius: 1rem;
+        }
+        
+        .battle-monster-rectangle {
+            position: relative;
+            width: 90%;
+            max-width: 400px;
+            height: 220px;
+            margin: 0 auto 0.5rem auto;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid #ffb347;
+            background: #000;
+            flex-shrink: 0; 
+        }
+        
+        .battle-monster-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .battle-monster-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: #ffd966;
+            text-align: center;
+            padding: 6px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            backdrop-filter: blur(2px);
+        }
+        .battle-timer {
+            font-size: 1rem;
+            color: #ffaa66;
+            margin-bottom: 0.3rem;
+            height: 1.2rem;
+        }
+        .battle-progress {
+            font-size: 0.9rem;
+            margin: 0.2rem 0;
+            color: #ffcc88;
+            height: 1.2rem;
+        }
+        
+        .battle-question {
+            background: #000000aa;
+            border-left: 8px solid #ffb347;
+            padding: 0.6rem;
+            font-size: 1.3rem;
+            margin: 0.4rem 0;
+            color: #ffeca2;
+            font-weight: bold;
+            width: 90%;
+            text-align: center;
+            height: 4.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .battle-explanation {
+            font-size: 0.9rem;
+            color: #ffcc88;
+            background: #00000088;
+            padding: 0.2rem;
+            border-radius: 1rem;
+            margin-top: 0;
+            width: 90%;
+            text-align: center;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-area {
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .battle-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .battle-btn {
+            background: #2c2e4e;
+            font-size: 1.8rem;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.05s linear;
+            font-family: monospace;
+            min-width: 100px;
+        }
+        .battle-btn:active { transform: scale(0.96); }
+        .battle-btn.in { background: #b13e3e; box-shadow: 0 0 6px #ff8888; }
+        .battle-btn.on { background: #3e8e41; box-shadow: 0 0 6px #88ff88; }
+        .battle-btn.at { background: #3e6b9e; box-shadow: 0 0 6px #88aaff; }
+        .battle-flash-correct { filter: brightness(1.8) drop-shadow(0 0 10px gold); }
+        .battle-flash-wrong { filter: brightness(0.4) drop-shadow(0 0 0px black); }
+        
+        .continue-btn {
+            background: #4a6e8a;
+            font-size: 1.2rem;
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: monospace;
+            margin: 0;
+        }
+
+        .controls-panel {
+            background: #0f1222;
+            border-radius: 2rem;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            width: 280px;
+            flex-shrink: 0;
+            border: 1px solid #f5c542;
+            justify-content: center;
+        }
+        .hud {
+            background: #0f1222;
+            color: #f5c542;
+            padding: 0.8rem;
+            border-radius: 1.5rem;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border: 1px solid #f5c542;
+        }
+        .power-balls {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.8rem;
+            margin-top: 0;
+        }
+        .power-balls span {
+            background: #232838;
+            padding: 0.3rem 0.6rem;
+            border-radius: 1.5rem;
+            font-size: 1.1rem;
+        }
+        .direction-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+            margin: 0.5rem 0;
+        }
+        .dir-btn {
+            background: #2c3e50;
+            border: none;
+            font-size: 2rem;
+            font-weight: bold;
+            padding: 0.5rem;
+            border-radius: 1rem;
+            color: #ecf0f1;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #0f1720;
+            font-family: monospace;
+            text-align: center;
+        }
+        .dir-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #0f1720; }
+        .restart-btn {
+            background: #7e2e2e;
+            font-size: 1.2rem;
+            padding: 0.7rem;
+            border: none;
+            border-radius: 1rem;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 0 #4a1a1a;
+        }
+        .restart-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #4a1a1a; }
+        .sound-control {
+            background: #2c3e50;
+            border: none;
+            border-radius: 2rem;
+            padding: 0.6rem;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #ffd966;
+            font-family: monospace;
+        }
+        .message-area {
+            background: #000000aa;
+            backdrop-filter: blur(4px);
+            padding: 0.6rem;
+            border-radius: 1rem;
+            text-align: center;
+            color: #ffcb8e;
+            font-weight: bold;
+            font-size: 0.9rem;
+            height: 4.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cell {
+            background-color: #2e5c3e;
+            border: 1px solid #3e7a53;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        .wall {
+            background-color: #3e2a2a !important;
+            border: 1px solid #5e3a3a !important;
+            background-image: radial-gradient(circle at 30% 35%, #523232, #2d1c1c);
+        }
+        .player {
+            background-color: #f5c542;
+            box-shadow: inset 0 0 0 2px #ffe5a3, 0 0 6px gold;
+            border-radius: 25%;
+        }
+        .exit {
+            background-color: #6a4e9b;
+            position: relative;
+        }
+        .exit::after { content: "☀️"; font-size: 1.6rem; opacity: 0.9; }
+
+        /* ---------- RESPONSIVE SCALING ---------- */
+        
+        /* Huge Screens / Fullscreen */
+        @media (min-width: 1400px) and (min-height: 900px) {
+            .grid { grid-template-columns: repeat(14, 68px); grid-template-rows: repeat(11, 68px); }
+            .battle-container, .end-overlay { width: calc(14 * 68px); height: calc(11 * 68px); }
+            .controls-panel { width: 340px; padding: 2.5rem; gap: 1.5rem; }
+            .dir-btn { font-size: 2.5rem; padding: 0.8rem; }
+            .battle-monster-rectangle { height: 320px; max-width: 500px; }
+            .battle-question { font-size: 1.6rem; height: 5.5rem; }
+            .battle-explanation { font-size: 1.1rem; height: 3.5rem; }
+            .battle-btn { font-size: 2.2rem; padding: 0.8rem 1.5rem; }
+            .cell { font-size: 2rem; }
+            .start-card { width: 800px; }
+        }
+
+        /* Large Screens */
+        @media (min-width: 1100px) and (min-height: 750px) and (max-width: 1399px) {
+            .grid { grid-template-columns: repeat(14, 56px); grid-template-rows: repeat(11, 56px); }
+            .battle-container, .end-overlay { width: calc(14 * 56px); height: calc(11 * 56px); }
+            .controls-panel { width: 300px; padding: 2rem; }
+            .dir-btn { font-size: 2.2rem; }
+            .battle-monster-rectangle { height: 260px; max-width: 450px; }
+            .battle-question { font-size: 1.4rem; height: 5rem; }
+            .cell { font-size: 1.8rem; }
+            .start-card { width: 700px; }
+        }
+
+        /* Small Screens (Tablets / Laptops) */
+        @media (max-width: 1000px) {
+            .grid { grid-template-columns: repeat(14, 40px); grid-template-rows: repeat(11, 40px); }
+            .battle-container, .end-overlay { width: calc(14 * 40px); height: calc(11 * 40px); }
+            .controls-panel { width: 240px; padding: 1.2rem; }
+            .dir-btn { font-size: 1.6rem; }
+            .battle-monster-rectangle { height: 180px; }
+        }
+        @media (max-width: 800px) {
+            .grid { grid-template-columns: repeat(14, 32px); grid-template-rows: repeat(11, 32px); }
+            .battle-container, .end-overlay { width: calc(14 * 32px); height: calc(11 * 32px); }
+            .controls-panel { width: 200px; padding: 1rem; }
+            .dir-btn { font-size: 1.3rem; padding: 0.3rem; }
+            .power-balls span { font-size: 0.9rem; }
+            .battle-btn { font-size: 1.2rem; padding: 0.3rem 0.8rem; min-width: 70px; }
+            .battle-monster-rectangle { height: 140px; }
+        }
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: repeat(14, 28px); grid-template-rows: repeat(11, 28px); }
+            .battle-container, .end-overlay { width: calc(14 * 28px); height: calc(11 * 28px); }
+            .controls-panel { width: 170px; padding: 0.8rem; gap: 0.8rem; }
+            .dir-btn { font-size: 1rem; }
+            .cell { font-size: 1rem; }
+            .battle-monster-rectangle { height: 100px; }
+            .battle-question { font-size: 1rem; padding: 0.4rem; height: 3.5rem; }
+            .battle-explanation { font-size: 0.8rem; height: 2.5rem; }
+            .battle-btn { font-size: 1rem; padding: 0.2rem 0.5rem; min-width: 60px; }
+            .action-area { height: 40px; }
+        }
+    </style>
+</head>
+<body>
+<div id="startScreen" class="start-screen">
+    <div class="start-card">
+        <img src="https://raw.githubusercontent.com/notviniciuss-arch/magetime/refs/heads/main/game-cover.png" alt="Game Cover">
+        <button id="startButton" class="start-btn">▶ START GAME</button>
+    </div>
+</div>
+
+<div id="gameRoot" class="game-container hidden-game">
+    <div class="maze-area">
+        <div id="grid" class="grid"></div>
+        <div id="battleContainer" class="battle-container">
+            <div class="battle-monster-rectangle">
+                <img id="battleMonsterImage" class="battle-monster-image" src="https://raw.githubusercontent.com/notviniciuss-arch/magetime/refs/heads/main/mage-vs-hourfist-neutral.png" alt="Monster">
+                <div class="battle-monster-overlay" id="monsterName">HOURFIST</div>
+            </div>
+            <div class="battle-timer" id="battleTimer">Time: 8s</div>
+            <div class="battle-progress" id="battleProgress">Question 1 / 3</div>
+            <div class="battle-question" id="battleQuestion">The milk is ... the fridge.</div>
+            <div class="battle-explanation" id="battleExplanation"></div>
+            
+            <div class="action-area" id="actionArea">
+                <div class="battle-buttons" id="battleButtons">
+                    <button class="battle-btn in" id="battleInBtn">🔴 IN</button>
+                    <button class="battle-btn on" id="battleOnBtn">🟢 ON</button>
+                    <button class="battle-btn at" id="battleAtBtn">🔵 AT</button>
+                </div>
+                <button id="continueBtn" class="continue-btn" style="display: none;">⏩ CONTINUE</button>
+            </div>
+
+        </div>
+        <div id="endOverlay" class="end-overlay">
+            <img id="endImage" src="" alt="Ending">
+            <p id="endText"></p>
+        </div>
+    </div>
+    <div class="controls-panel">
+        <div class="hud">
+            <div class="power-balls">
+                <span>🔴 IN: <span id="in-count">5</span></span>
+                <span>🟢 ON: <span id="on-count">5</span></span>
+                <span>🔵 AT: <span id="at-count">5</span></span>
+            </div>
+        </div>
+        <div class="direction-controls">
+            <div></div>
+            <button class="dir-btn" id="up">▲</button>
+            <div></div>
+            <button class="dir-btn" id="left">◀</button>
+            <button class="dir-btn" id="down">▼</button>
+            <button class="dir-btn" id="right">▶</button>
+        </div>
+        <button id="restart" class="restart-btn">🔄 RESTART</button>
+        
+        <div style="display: flex; gap: 0.5rem;">
+            <button id="muteBtn" class="sound-control" style="flex: 1;">🔊 MUTE</button>
+            <button id="fullscreenBtn" class="sound-control" style="flex: 1;">🔲 FULL</button>
+        </div>
+
+        <div id="message" class="message-area">👹 Two monsters roam! Answer 3 questions each battle.</div>
+    </div>
+</div>
+
+<script>
+    // ---------- PROTECTION LAYERS ----------
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.addEventListener('keydown', event => {
+        if (event.key === 'F12' || 
+            (event.ctrlKey && event.shiftKey && (event.key === 'I' || event.key === 'i' || event.key === 'J' || event.key === 'j' || event.key === 'C' || event.key === 'c')) || 
+            (event.ctrlKey && (event.key === 'U' || event.key === 'u'))) {
+            event.preventDefault();
+        }
+    });
+
+    // ---------- FIVE NEW CHALLENGING MAZES ----------
+    const MAZES = [
+        [
+            [0,0,1,0,0,0,0,1,0,0,0,0,1,0],
+            [0,1,1,0,1,1,0,1,0,1,1,0,1,0],
+            [0,0,0,0,1,0,0,0,0,1,0,0,0,0],
+            [1,1,1,0,1,0,1,1,1,1,0,1,1,1],
+            [0,0,0,0,1,0,0,0,0,0,0,0,0,0],
+            [0,1,1,1,1,1,1,1,0,1,1,1,1,0],
+            [0,0,0,0,0,0,0,1,0,1,0,0,0,0],
+            [1,1,1,1,1,1,0,1,0,1,0,1,1,1],
+            [0,0,0,0,0,1,0,0,0,1,0,0,0,0],
+            [0,1,1,1,0,1,1,1,1,1,1,1,1,0],
+            [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        ],
+        [
+            [0,0,0,0,0,1,0,0,0,0,0,1,0,0],
+            [1,1,1,1,0,1,0,1,1,1,0,1,0,1],
+            [0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+            [0,1,1,1,1,1,1,1,0,1,1,1,1,1],
+            [0,0,0,1,0,0,0,0,0,1,0,0,0,0],
+            [1,1,0,1,0,1,1,1,1,1,0,1,1,0],
+            [0,0,0,0,0,1,0,0,0,0,0,1,0,0],
+            [0,1,1,1,1,1,0,1,1,1,1,1,0,1],
+            [0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,0,1,1],
+            [0,0,0,0,0,0,0,0,0,1,0,0,0,0]
+        ],
+        [
+            [0,1,0,0,0,0,0,1,0,0,0,1,0,0],
+            [0,1,0,1,1,1,0,1,0,1,0,1,0,1],
+            [0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+            [1,1,1,1,0,1,1,1,1,1,1,1,0,1],
+            [0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+            [0,1,1,1,1,1,0,1,1,1,1,1,1,1],
+            [0,0,0,0,0,0,0,1,0,0,0,0,0,0],
+            [0,1,0,1,1,1,1,1,0,1,1,1,1,0],
+            [0,0,0,1,0,0,0,0,0,1,0,0,0,0],
+            [0,1,1,1,0,1,1,1,1,1,0,1,1,0],
+            [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        ],
+        [
+            [0,1,0,0,0,1,0,0,0,0,0,0,1,0],
+            [0,1,0,1,0,1,0,1,1,1,1,0,1,0],
+            [0,0,0,1,0,0,0,1,0,0,1,0,1,0],
+            [1,1,1,1,1,1,0,1,0,1,1,0,1,0],
+            [0,0,0,0,0,0,0,1,0,0,0,0,1,0],
+            [0,1,1,1,1,1,1,1,1,1,1,1,1,0],
+            [0,1,0,0,0,0,0,0,0,0,0,0,0,0],
+            [0,1,0,1,1,1,1,1,1,1,1,0,1,1],
+            [0,1,0,1,0,0,0,0,0,0,0,0,1,0],
+            [0,1,0,1,0,1,1,1,1,1,1,0,1,0],
+            [0,0,0,1,0,0,0,0,0,0,0,0,0,0]
+        ],
+    ];
+
+    for (let m of MAZES) {
+        m[0][0] = 0;
+        m[10][13] = 0;
+    }
+
+    let currentMaze = null;
+
+    // ---------- QUESTION BANK ----------
+    const ALL_QUESTIONS = [
+        { q: "My birthday is... May.", a: "in" },
+        { q: "We moved to this city... 2009.", a: "in" },
+        { q: "It is very cold here... winter.", a: "in" },
+        { q: "The flowers bloom... the spring.", a: "in" },
+        { q: "She'll finish her degree... two years.", a: "in" },
+        { q: "I usually go on vacation... July.", a: "in" },
+        { q: "The movie starts... ten minutes.", a: "in" },
+        { q: "Life was very different... the 1990s.", a: "in" },
+        { q: "He works... the morning.", a: "in" },
+        { q: "The library's very quiet... the afternoon.", a: "in" },
+        { q: "I have an appointment... Monday.", a: "on" },
+        { q: "We always party... Christmas Day.", a: "on" },
+        { q: "Our wedding anniversary is... June 15th.", a: "on" },
+        { q: "He started his new job... Wednesday.", a: "on" },
+        { q: "The store is closed... Sundays.", a: "on" },
+        { q: "We're going to the beach... my birthday.", a: "on" },
+        { q: "Do you have classes... Friday morning?", a: "on" },
+        { q: "The package should arrive... New Year's Day.", a: "on" },
+        { q: "Let's meet... October, 5th.", a: "on" },
+        { q: "I like to sleep in late... Saturdays.", a: "on" },
+        { q: "The train leaves... 6:00 PM.", a: "at" },
+        { q: "I usually wake up... 7:00 AM.", a: "at" },
+        { q: "The supermarket closes... midnight.", a: "at" },
+        { q: "We like to see the stars... night.", a: "at" },
+        { q: "Let's have lunch... noon.", a: "at" },
+        { q: "The meeting is... 2:30 PM.", a: "at" },
+        { q: "He arrived... the same time as me.", a: "at" },
+        { q: "The kids are sleeping... the moment.", a: "at" },
+        { q: "The show ends... 9:00 PM.", a: "at" },
+        { q: "We'll see you... dawn.", a: "at" }
+    ];
+
+    let availableQuestions = [...ALL_QUESTIONS];
+
+    function getThreeUnusedQuestions() {
+        if (availableQuestions.length < 3) availableQuestions = [...ALL_QUESTIONS];
+        const shuffled = [...availableQuestions];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        const selected = shuffled.slice(0, 3);
+        selected.forEach(q => {
+            const index = availableQuestions.findIndex(aq => aq.q === q.q && aq.a === q.a);
+            if (index !== -1) availableQuestions.splice(index, 1);
+        });
+        return selected;
+    }
+
+    function getExplanation(correctPrep, questionText) {
+        const lowerText = questionText.toLowerCase();
+        if (correctPrep === 'in') {
+            if (lowerText.includes('year') || lowerText.includes('2020') || lowerText.includes('1990s')) return "Use 'in' for years and decades.";
+            if (lowerText.includes('may') || lowerText.includes('july')) return "Use 'in' for months.";
+            if (lowerText.includes('winter') || lowerText.includes('spring')) return "Use 'in' for seasons.";
+            if (lowerText.includes('morning') || lowerText.includes('afternoon')) return "Use 'in' for parts of the day (morning/afternoon/evening).";
+            if (lowerText.includes('minutes') || lowerText.includes('two years')) return "Use 'in' for a period of time (duration).";
+            return "Use 'in' for long periods of time.";
+        } else if (correctPrep === 'on') {
+            if (lowerText.includes('monday') || lowerText.includes('wednesday') || lowerText.includes('sunday')) return "Use 'on' for days of the week.";
+            if (lowerText.includes('christmas day') || lowerText.includes('june 15th') || lowerText.includes('new year\'s day')) return "Use 'on' for specific dates.";
+            if (lowerText.includes('my birthday') || lowerText.includes('the 5th of october')) return "Use 'on' for a specific day (e.g. birthday).";
+            return "Use 'on' for days and specific dates.";
+        } else {
+            if (lowerText.includes('6:00') || lowerText.includes('7:00') || lowerText.includes('2:30') || lowerText.includes('9:00')) return "Use 'at' for specific clock times.";
+            if (lowerText.includes('midnight') || lowerText.includes('noon') || lowerText.includes('dawn')) return "Use 'at' for specific points of the day (noon, midnight, dawn).";
+            if (lowerText.includes('night') || lowerText.includes('the moment')) return "Use 'at' for fixed expressions: 'at night', 'at the moment'.";
+            return "Use 'at' for precise points (time, place, address).";
+        }
+    }
+
+    function formatQuestionWithAnswerAndExplanation(questionText, correctAnswer, isUserCorrect) {
+        const color = isUserCorrect ? "#88ff88" : "#ff8888";
+        const filled = questionText.replace("...", `<span style="color: ${color}; font-weight: bold; text-decoration: underline; margin: 0 0.4rem;">${correctAnswer.toUpperCase()}</span>`);
+        let explanationHtml = '';
+        if (!isUserCorrect) {
+            const explanation = getExplanation(correctAnswer, questionText);
+            explanationHtml = `📖 ${explanation}`;
+        } else {
+            explanationHtml = `<span style="color: #88ff88; font-weight: bold; letter-spacing: 1px;">✨ CORRECT! ✨</span>`;
+        }
+        return { filled, explanationHtml };
+    }
+
+    const MONSTERS = {
+        hourfist: {
+            name: "HOURFIST",
+            normalImg: "https://raw.githubusercontent.com/notviniciuss-arch/magetime/refs/heads/main/mage-vs-hourfist-neutral.png",
+            correctImg: "https://raw.githubusercontent.com/notviniciuss-arch/magetime/refs/heads/main/mage-vs-hourfist-right.png",
+            wrongImg: "https://raw.githubusercontent.com/notviniciuss-arch/magetime/refs/heads/main/mage-vs-hourfist-wrong.png",
+            soundCorrect: new Audio("https://github.com/notviniciuss-arch/magetime/raw/eb6769e062ab69a1fb1099f70dc933ec07d3564b/monster-punched.mp3"),
+            soundWrong: new Audio("https://github.com/notviniciuss-arch/magetime/raw/eb6769e062ab69a1fb1099f70dc933ec07d3564b/mage-punched.mp3")
+        },
+        calen: {
+            name: "CALEN",
+            normalImg: "https://raw.githubusercontent.com/notviniciuss-arch/magetime/refs/heads/main/mage-vs-calen-neutral.png",
+            correctImg: "https://raw.githubusercontent.com/notviniciuss-arch/magetime/refs/heads/main/mage-vs-calen-right.png",
+            wrongImg: "https://raw.githubusercontent.com/notviniciuss-arch/magetime/refs/heads/main/mage-vs-calen-wrong.png",
+            soundCorrect: new Audio("https://github.com/notviniciuss-arch/magetime/raw/46ce7a86440c03a92652f1cfd2353e935fce3ccd/witch-attacked.mp3"),
+            soundWrong: new Audio("https://github.com/notviniciuss-arch/magetime/raw/46ce7a86440c03a92652f1cfd2353e935fce3ccd/mage-attacked-witch.mp3")
+        }
+    };
+    
+    // ---------- PRELOAD IMAGES ----------
+    const preloadedImages = [];
+    function preloadMonsterImages() {
+        const imageUrls = [
+            MONSTERS.hourfist.normalImg,
+            MONSTERS.hourfist.correctImg,
+            MONSTERS.hourfist.wrongImg,
+            MONSTERS.calen.normalImg,
+            MONSTERS.calen.correctImg,
+            MONSTERS.calen.wrongImg,
+            "https://raw.githubusercontent.com/notviniciuss-arch/magetime/refs/heads/main/mage-died.png",
+            "https://raw.githubusercontent.com/notviniciuss-arch/magetime/refs/heads/main/mage-won.png"
+        ];
+        
+        imageUrls.forEach(url => {
+            const img = new Image();
+            img.src = url;
+            preloadedImages.push(img);
+        });
+    }
+    preloadMonsterImages();
+
+    const WIDTH = 14, HEIGHT = 11;
+
+    let player = { x: 0, y: 0 };
+    let balls = { in: 5, on: 5, at: 5 };
+    let gameOver = false, victory = false;
+    let stepsSinceLastEncounter = 0;
+    let battleActive = false;
+    let currentMonster = null;
+    let currentQuestionIndex = 0;
+    let currentQuestions = [];
+    let currentImageTimeout = null;
+    let currentTimerInterval = null;
+    let currentTimerSeconds = 8;
+    let waitingForContinue = false;
+    let battleCorrectCount = 0;
+
+    // Music
+    const bgMusic = new Audio("https://github.com/notviniciuss-arch/magetime/raw/eb6769e062ab69a1fb1099f70dc933ec07d3564b/background-song.mp3");
+    bgMusic.loop = true;
+    bgMusic.volume = 0.5;
+    const battleMusic = new Audio("https://github.com/notviniciuss-arch/magetime/raw/refs/heads/main/background-battle.mp3");
+    battleMusic.loop = true;
+    battleMusic.volume = 0.5;
+    const victorySound = new Audio("https://github.com/notviniciuss-arch/magetime/raw/38d4cbfd3e185f458bc363ec1ce2b8085df384c3/end%20of%20game%20win.mp3");
+
+    let musicMuted = false;
+
+    function stopAllMusic() { bgMusic.pause(); battleMusic.pause(); bgMusic.currentTime = 0; battleMusic.currentTime = 0; }
+    function playSound(sound) { if (!musicMuted) { sound.currentTime = 0; sound.play().catch(e=>console.log(e)); } }
+    function pauseBgMusic() { if (!bgMusic.paused) bgMusic.pause(); }
+    function resumeBgMusic() { if (!musicMuted && bgMusic.paused) bgMusic.play().catch(e=>console.log(e)); }
+    function startBattleMusic() { if (!musicMuted) battleMusic.play().catch(e=>console.log(e)); }
+    function stopBattleMusic() { battleMusic.pause(); battleMusic.currentTime = 0; }
+
+    // DOM elements
+    const gridDiv = document.getElementById("grid");
+    const battleContainer = document.getElementById("battleContainer");
+    const endOverlay = document.getElementById("endOverlay");
+    const endImage = document.getElementById("endImage");
+    const endText = document.getElementById("endText");
+    const inSpan = document.getElementById("in-count");
+    const onSpan = document.getElementById("on-count");
+    const atSpan = document.getElementById("at-count");
+    const msgDiv = document.getElementById("message");
+    const battleQuestion = document.getElementById("battleQuestion");
+    const battleProgress = document.getElementById("battleProgress");
+    const battleTimerSpan = document.getElementById("battleTimer");
+    const battleExplanationDiv = document.getElementById("battleExplanation");
+    const monsterImg = document.getElementById("battleMonsterImage");
+    const monsterNameSpan = document.getElementById("monsterName");
+    const battleButtonsDiv = document.getElementById("battleButtons");
+    const continueBtn = document.getElementById("continueBtn");
+
+    function updateHUD() { inSpan.textContent = balls.in; onSpan.textContent = balls.on; atSpan.textContent = balls.at; }
+    
+    function showMessage(text, isErr=false) { msgDiv.innerHTML = isErr ? `💀 ${text}` : `✨ ${text}`; msgDiv.style.color = isErr ? "#ffaa88" : "#c3e88d"; setTimeout(() => { if (!gameOver && !victory && !battleActive) msgDiv.style.color = "#ffcb8e"; }, 2000); }
+    function isWall(x,y) { return x<0||x>=WIDTH||y<0||y>=HEIGHT || currentMaze[y][x]===1; }
+    function setBattleImage(imgUrl, holdTime=1000) { if (currentImageTimeout) clearTimeout(currentImageTimeout); monsterImg.src = imgUrl; if (imgUrl !== currentMonster.normalImg) { currentImageTimeout = setTimeout(() => { if (battleActive) monsterImg.src = currentMonster.normalImg; currentImageTimeout = null; }, holdTime); } }
+    function flashBattleContainer(type) { if (type === 'correct') { battleContainer.classList.add('battle-flash-correct'); setTimeout(() => battleContainer.classList.remove('battle-flash-correct'), 200); } else if (type === 'wrong') { battleContainer.classList.add('battle-flash-wrong'); setTimeout(() => battleContainer.classList.remove('battle-flash-wrong'), 200); } }
+
+    function showEnding(imageUrl, messageText, isVictory) {
+        gameOver = true; victory = isVictory;
+        if (battleActive) { battleActive = false; battleContainer.style.display = "none"; }
+        stopAllMusic();
+        if (isVictory) playSound(victorySound);
+        gridDiv.style.display = "none";
+        battleContainer.style.display = "none";
+        endImage.src = imageUrl;
+        endText.textContent = messageText;
+        endOverlay.style.display = "flex";
+        if (currentTimerInterval) clearInterval(currentTimerInterval);
+        waitingForContinue = false;
+    }
+
+    function stopTimer() { if (currentTimerInterval) { clearInterval(currentTimerInterval); currentTimerInterval = null; } }
+    function startTimer() {
+        if (!battleActive || waitingForContinue) return;
+        stopTimer();
+        currentTimerSeconds = 8;
+        battleTimerSpan.textContent = `Time: ${currentTimerSeconds}s`;
+        currentTimerInterval = setInterval(() => {
+            if (!battleActive || waitingForContinue) return;
+            if (currentTimerSeconds <= 1) {
+                clearInterval(currentTimerInterval);
+                currentTimerInterval = null;
+                timeoutPenalty();
+            } else {
+                currentTimerSeconds--;
+                battleTimerSpan.textContent = `Time: ${currentTimerSeconds}s`;
+            }
+        }, 1000);
+    }
+
+    function timeoutPenalty() {
+        if (!battleActive) return;
+        playSound(currentMonster.soundWrong);
+        setBattleImage(currentMonster.wrongImg, 1000);
+        flashBattleContainer('wrong');
+        
+        balls.in = Math.max(0, balls.in - 3);
+        balls.on = Math.max(0, balls.on - 3);
+        balls.at = Math.max(0, balls.at - 3);
+        
+        updateHUD();
+        showMessage(`⏰ Time's up! The monster attacks! You lost 3 IN, 3 ON, and 3 AT balls.`, true);
+        
+        if (balls.in <= 0 && balls.on <= 0 && balls.at <= 0) {
+            showEnding("https://raw.githubusercontent.com/notviniciuss-arch/magetime/refs/heads/main/mage-died.png", "💀 THE MAGE TURNED TO DUST... GAME OVER 💀", false);
+            return;
+        }
+        startTimer();
+    }
+
+    function startBattle() {
+        if (gameOver || victory || battleActive) return;
+        battleActive = true;
+        waitingForContinue = false;
+        battleCorrectCount = 0; 
+        const monsterKey = Math.random() < 0.5 ? 'hourfist' : 'calen';
+        currentMonster = MONSTERS[monsterKey];
+        monsterNameSpan.textContent = currentMonster.name;
+        monsterImg.src = currentMonster.normalImg;
+        currentQuestions = getThreeUnusedQuestions();
+        currentQuestionIndex = 0;
+        gridDiv.style.display = "none";
+        battleContainer.style.display = "flex";
+        continueBtn.style.display = "none";
+        battleButtonsDiv.style.display = "flex";
+        pauseBgMusic();
+        startBattleMusic();
+        showNextQuestion();
+    }
+
+    function showNextQuestion() {
+        if (!battleActive) return;
+        if (currentQuestionIndex >= 3) { endBattle(); return; }
+        waitingForContinue = false;
+        const q = currentQuestions[currentQuestionIndex];
+        window.currentQuestionText = q.q;
+        battleQuestion.innerHTML = q.q;
+        battleExplanationDiv.innerHTML = '';
+        battleProgress.textContent = `Question ${currentQuestionIndex+1} / 3`;
+        
+        window.currentAnswer = q.a;
+        monsterImg.src = currentMonster.normalImg;
+        if (currentImageTimeout) clearTimeout(currentImageTimeout);
+        continueBtn.style.display = "none";
+        battleButtonsDiv.style.display = "flex";
+        startTimer();
+    }
+
+    function endBattle() {
+        battleActive = false;
+        waitingForContinue = false;
+        stopTimer();
+        stopBattleMusic();
+        resumeBgMusic();
+        
+        if (battleCorrectCount === 3) {
+            balls.in += 3;
+            balls.on += 3;
+            balls.at += 3;
+            updateHUD();
+            showMessage("🎉 Flawless Battle! Bonus: +3 IN, +3 ON, +3 AT!", false);
+        } else {
+            showMessage("The monster retreats! You survived 3 questions.", false);
+        }
+        
+        battleContainer.style.display = "none";
+        gridDiv.style.display = "grid";
+        renderGrid();
+    }
+
+    function afterAnswerContinue() {
+        if (!battleActive || !waitingForContinue) return;
+        waitingForContinue = false;
+        currentQuestionIndex++;
+        if (currentQuestionIndex < 3) {
+            showNextQuestion();
+        } else {
+            endBattle();
+        }
+    }
+
+    function answerQuestion(selected) {
+        if (!battleActive || waitingForContinue) return;
+        const correct = window.currentAnswer;
+        if (!correct) return;
+        
+        if (balls[selected] <= 0) {
+            showMessage(`No ${selected.toUpperCase()} balls left! Game over.`, true);
+            showEnding("https://raw.githubusercontent.com/notviniciuss-arch/magetime/refs/heads/main/mage-died.png", "💀 THE MAGE TURNED TO DUST... GAME OVER 💀", false);
+            return;
+        }
+        
+        stopTimer();
+        const isCorrect = (selected === correct);
+        const { filled, explanationHtml } = formatQuestionWithAnswerAndExplanation(window.currentQuestionText, correct, isCorrect);
+        battleQuestion.innerHTML = filled;
+        battleExplanationDiv.innerHTML = explanationHtml;
+        
+        if (isCorrect) {
+            balls[correct] += 3;
+            battleCorrectCount++;
+            updateHUD();
+            showMessage(`✓ Correct! +3 ${correct.toUpperCase()} balls!`, false);
+            setBattleImage(currentMonster.correctImg, 1000);
+            playSound(currentMonster.soundCorrect);
+            flashBattleContainer('correct');
+            
+            battleButtonsDiv.style.display = "none";
+            continueBtn.style.display = "block";
+            waitingForContinue = true;
+            
+        } else {
+            balls[selected] = Math.max(0, balls[selected] - 3);
+            updateHUD();
+            showMessage(`❌ Wrong! Answer was "${correct.toUpperCase()}". You lost 3 ${selected.toUpperCase()} balls.`, true);
+            setBattleImage(currentMonster.wrongImg, 1000);
+            playSound(currentMonster.soundWrong);
+            flashBattleContainer('wrong');
+            
+            battleButtonsDiv.style.display = "none";
+            continueBtn.style.display = "block";
+            waitingForContinue = true;
+        }
+        
+        if (balls.in <= 0 && balls.on <= 0 && balls.at <= 0) {
+            showMessage("No power balls left! You die. GAME OVER", true);
+            showEnding("https://raw.githubusercontent.com/notviniciuss-arch/magetime/refs/heads/main/mage-died.png", "💀 THE MAGE TURNED TO DUST... GAME OVER 💀", false);
+            return;
+        }
+    }
+
+    function renderGrid() {
+        gridDiv.innerHTML = "";
+        for (let row = 0; row < HEIGHT; row++) {
+            for (let col = 0; col < WIDTH; col++) {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                if (currentMaze[row][col] === 1) cell.classList.add("wall");
+                else {
+                    if (player.x === col && player.y === row) { cell.classList.add("player"); cell.textContent = "🧙"; }
+                    else if (col === WIDTH-1 && row === HEIGHT-1) cell.classList.add("exit");
+                    else cell.textContent = "";
+                }
+                gridDiv.appendChild(cell);
+            }
+        }
+        if (victory) { const exitCell = document.querySelector('.cell.exit'); if (exitCell) exitCell.classList.add('exit-victory'); }
+    }
+
+    function victorySequence() {
+        if (battleActive) { battleActive = false; battleContainer.style.display = "none"; }
+        stopAllMusic();
+        showEnding("https://raw.githubusercontent.com/notviniciuss-arch/magetime/refs/heads/main/mage-won.png", "🏆 THE MAGE ESCAPED THE LABYRINTH! VICTORY! 🏆", true);
+    }
+
+    function tryMove(dx, dy) {
+        if (gameOver || victory || battleActive) return false;
+        if (!musicMuted && bgMusic.paused) bgMusic.play().catch(e=>console.log(e));
+        const nx = player.x + dx, ny = player.y + dy;
+        if (isWall(nx, ny)) { showMessage("🧱 Wall!", true); return false; }
+        player.x = nx; player.y = ny;
+        stepsSinceLastEncounter++;
+        renderGrid();
+        if (player.x === WIDTH-1 && player.y === HEIGHT-1) { victorySequence(); return true; }
+        let encounterChance = 0.25;
+        if (stepsSinceLastEncounter >= 5) encounterChance = Math.min(0.8, 0.25 + (stepsSinceLastEncounter - 5) * 0.1);
+        if (Math.random() < encounterChance && !gameOver && !victory && !battleActive) {
+            stepsSinceLastEncounter = 0;
+            showMessage("👹 A monster appears! Answer 3 questions!", false);
+            startBattle();
+        }
+        updateHUD();
+        return true;
+    }
+
+    function restart() {
+        const randomIndex = Math.floor(Math.random() * MAZES.length);
+        currentMaze = MAZES[randomIndex].map(row => [...row]);
+
+        player = { x: 0, y: 0 };
+        balls = { in: 5, on: 5, at: 5 };
+        gameOver = false; victory = false; battleActive = false;
+        stepsSinceLastEncounter = 0; currentQuestionIndex = 0; waitingForContinue = false;
+        availableQuestions = [...ALL_QUESTIONS];
+        if (currentImageTimeout) clearTimeout(currentImageTimeout);
+        stopTimer();
+        endOverlay.style.display = "none";
+        gridDiv.style.display = "grid";
+        battleContainer.style.display = "none";
+        stopAllMusic();
+        resumeBgMusic();
+        updateHUD();
+        renderGrid();
+        showMessage("Game restarted! New maze layout – defeat the monsters!", false);
+    }
+
+    document.getElementById("battleInBtn").onclick = () => answerQuestion("in");
+    document.getElementById("battleOnBtn").onclick = () => answerQuestion("on");
+    document.getElementById("battleAtBtn").onclick = () => answerQuestion("at");
+    continueBtn.onclick = () => afterAnswerContinue();
+    document.getElementById("up").onclick = () => tryMove(0, -1);
+    document.getElementById("down").onclick = () => tryMove(0, 1);
+    document.getElementById("left").onclick = () => tryMove(-1, 0);
+    document.getElementById("right").onclick = () => tryMove(1, 0);
+    document.getElementById("restart").onclick = () => restart();
+    
+    // Mute Button Logic
+    const muteGameBtn = document.getElementById("muteBtn");
+    muteGameBtn.addEventListener("click", () => {
+        if (musicMuted) {
+            musicMuted = false;
+            bgMusic.play().catch(e=>console.log(e));
+            muteGameBtn.textContent = "🔊 MUTE";
+        } else {
+            musicMuted = true;
+            stopAllMusic();
+            muteGameBtn.textContent = "🔇 UNMUTE";
+        }
+    });
+
+    // Fullscreen Button Logic
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+    fullscreenBtn.addEventListener("click", () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    });
+
+    // Update the button text if the user exits fullscreen using the ESC key
+    document.addEventListener("fullscreenchange", () => {
+        if (document.fullscreenElement) {
+            fullscreenBtn.textContent = "🔳 EXIT";
+        } else {
+            fullscreenBtn.textContent = "🔲 FULL";
+        }
+    });
+
+    const startScreen = document.getElementById("startScreen");
+    const gameRoot = document.getElementById("gameRoot");
+    const startBtn = document.getElementById("startButton");
+    startBtn.addEventListener("click", () => {
+        startScreen.style.opacity = "0";
+        setTimeout(() => {
+            startScreen.style.display = "none";
+            gameRoot.classList.remove("hidden-game");
+            restart();
+        }, 500);
+    });
+</script>
+</body>
+</html>
