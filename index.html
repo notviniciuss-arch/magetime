@@ -574,11 +574,16 @@
         { q: "It is very cold here... winter.", a: "in" },
         { q: "The flowers bloom... the spring.", a: "in" },
         { q: "She'll finish her degree... two years.", a: "in" },
+        { q: "We're leaving... five minutes.", a: "in" },
+        { q: "The plumber will be here... a few hours.", a: "in" },
         { q: "I usually go on vacation... July.", a: "in" },
         { q: "The movie starts... ten minutes.", a: "in" },
         { q: "Life was very different... the 1990s.", a: "in" },
         { q: "He works... the morning.", a: "in" },
         { q: "The library's very quiet... the afternoon.", a: "in" },
+        { q: "My parents met... the 80s.", a: "in" },
+        { q: "The new semester starts... August.", a: "in" },
+        { q: "My aunt wants to retire... her sixties.", a: "in" },
         { q: "I have an appointment... Monday.", a: "on" },
         { q: "We always party... Christmas Day.", a: "on" },
         { q: "Our wedding anniversary is... June 15th.", a: "on" },
@@ -589,6 +594,11 @@
         { q: "The package should arrive... New Year's Day.", a: "on" },
         { q: "Let's meet... October, 5th.", a: "on" },
         { q: "I like to sleep in late... Saturdays.", a: "on" },
+        { q: "I got chocolates... Valentine's Day.", a: "on" },
+        { q: "I always do my laundry... Sunday morning", a: "on" },
+        { q: "Are you getting paid double... Labor Day?", a: "on" },
+        { q: "Let's travel together... my next day off.", a: "on" },
+        { q: "My monthly payday is... the 10th.", a: "on" },
         { q: "The train leaves... 6:00 PM.", a: "at" },
         { q: "I usually wake up... 7:00 AM.", a: "at" },
         { q: "The supermarket closes... midnight.", a: "at" },
@@ -598,7 +608,13 @@
         { q: "He arrived... the same time as me.", a: "at" },
         { q: "The kids are sleeping... the moment.", a: "at" },
         { q: "The show ends... 9:00 PM.", a: "at" },
-        { q: "We'll see you... dawn.", a: "at" }
+        { q: "We'll see you... dawn.", a: "at" },
+        { q: "The bell rings... quarter past three.", a: "at" },
+        { q: "The bus arrives... 8:15 AM.", a: "at" },
+        { q: "Call her back... half past two.", a: "at" },
+        { q: "I always feel tired... the end of the day.", a: "at" },
+        { q: "We'll review the rules... the beginning of the game.", a: "at" },
+
     ];
 
     let availableQuestions = [...ALL_QUESTIONS];
@@ -620,23 +636,66 @@
 
     function getExplanation(correctPrep, questionText) {
         const lowerText = questionText.toLowerCase();
+
         if (correctPrep === 'in') {
-            if (lowerText.includes('year') || lowerText.includes('2020') || lowerText.includes('1990s')) return "Use 'in' for years and decades.";
-            if (lowerText.includes('may') || lowerText.includes('july')) return "Use 'in' for months.";
-            if (lowerText.includes('winter') || lowerText.includes('spring')) return "Use 'in' for seasons.";
-            if (lowerText.includes('morning') || lowerText.includes('afternoon')) return "Use 'in' for parts of the day (morning/afternoon/evening).";
-            if (lowerText.includes('minutes') || lowerText.includes('two years')) return "Use 'in' for a period of time (duration).";
-            return "Use 'in' for long periods of time.";
-        } else if (correctPrep === 'on') {
-            if (lowerText.includes('monday') || lowerText.includes('wednesday') || lowerText.includes('sunday')) return "Use 'on' for days of the week.";
-            if (lowerText.includes('christmas day') || lowerText.includes('june 15th') || lowerText.includes('new year\'s day')) return "Use 'on' for specific dates.";
-            if (lowerText.includes('my birthday') || lowerText.includes('the 5th of october')) return "Use 'on' for a specific day (e.g. birthday).";
+            // Decades: the 1990s, the 80s, 90s, etc.
+            if (lowerText.match(/\b\d{2,4}s\b/) || lowerText.includes('1990s')) 
+                return "Use 'in' for decades.";
+            // Years (e.g., 2009, 2020)
+            if (lowerText.match(/\b(19|20)\d{2}\b/)) 
+                return "Use 'in' for years.";
+            // Months – but not if followed by a specific date (e.g., "June 15th")
+            if (lowerText.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\b(?!\s+\d+)/)) 
+                return "Use 'in' for months.";
+            // Seasons
+            if (lowerText.includes('winter') || lowerText.includes('spring') || lowerText.includes('summer') || lowerText.includes('autumn') || lowerText.includes('fall')) 
+                return "Use 'in' for seasons.";
+            // Parts of the day (morning, afternoon, evening)
+            if (lowerText.includes('morning') || lowerText.includes('afternoon') || lowerText.includes('evening')) 
+                return "Use 'in' for parts of the day.";
+            // Duration: how long from now something will happen (catches words + digits)
+            if (lowerText.match(/\b(second|minute|hour|day|week|month|year)s?\b/) && 
+                (lowerText.includes('a ') || lowerText.includes('an ') || 
+                 lowerText.match(/\d+/) || 
+                 lowerText.match(/\b(one|two|three|four|five|six|seven|eight|nine|ten|a few|a couple of)\b/))) 
+                return "Use 'in' to say how long from now something will happen.";
+            // Age decades (her sixties, his twenties, etc.)
+            if (lowerText.match(/\b(twenties|thirties|forties|fifties|sixties|seventies|eighties|nineties)\b/)) 
+                return "Use 'in' for decades of life (age ranges).";
+            return "Use 'in' for longer periods such as months, years, seasons, or decades.";
+        } 
+        else if (correctPrep === 'on') {
+            // Days of the week (including "Sunday morning")
+            if (lowerText.match(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/)) 
+                return "Use 'on' for days of the week.";
+            // Specific dates and holidays (Christmas, New Year's, Valentine's, Labor Day, June 15th, October 5th)
+            if (lowerText.match(/\b(christmas|new year's|valentine's|labor day)\b/) || 
+                lowerText.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}(th|st|nd|rd)?\b/)) 
+                return "Use 'on' for specific dates and holidays.";
+            // Weekend, birthday, day off
+            if (lowerText.includes('weekend') || lowerText.includes('birthday') || lowerText.includes('day off')) 
+                return "Use 'on' for a specific days (e.g. birthday, day off).";
             return "Use 'on' for days and specific dates.";
-        } else {
-            if (lowerText.includes('6:00') || lowerText.includes('7:00') || lowerText.includes('2:30') || lowerText.includes('9:00')) return "Use 'at' for specific clock times.";
-            if (lowerText.includes('midnight') || lowerText.includes('noon') || lowerText.includes('dawn')) return "Use 'at' for specific points of the day (noon, midnight, dawn).";
-            if (lowerText.includes('night') || lowerText.includes('the moment')) return "Use 'at' for fixed expressions: 'at night', 'at the moment'.";
-            return "Use 'at' for precise points (time, place, address).";
+        } 
+        else { // correctPrep === 'at'
+            // Spoken clock times (half past two, quarter past three, ten to five, three o'clock, etc.)
+            if (lowerText.match(/\b(half|quarter)\s+(past|to)\s+\d+\b/) ||
+                lowerText.match(/\b(twenty|twenty-five|ten|five|twenty|forty|forty-five)\s+(past|to)?\s*\d+\b/) ||
+                lowerText.match(/\b\d+\s*o'clock\b/)) {
+                return "Use 'at' with clock time expressions.";
+            }
+            // Specific numeric times (6:00 PM, 8:15 AM, 2:30 PM, etc.)
+            if (lowerText.match(/\b\d{1,2}:\d{2}\s*(am|pm)?\b/) || 
+                lowerText.match(/\b\d{1,2}\s*(am|pm)\b/)) {
+                return "Use 'at' for specific clock times.";
+            }
+            // Fixed points: midnight, noon, dawn
+            if (lowerText.includes('midnight') || lowerText.includes('noon') || lowerText.includes('dawn')) 
+                return "Use 'at' for specific points of the day.";
+            // Fixed expressions: night, the moment, the end of the day, the beginning
+            if (lowerText.includes('night') || lowerText.includes('the moment') || lowerText.includes('the end of the day') || lowerText.includes('the beginning')) 
+                return "Use 'at' with fixed expressions.";
+            return "Use 'at' for precise points in time.";
         }
     }
 
